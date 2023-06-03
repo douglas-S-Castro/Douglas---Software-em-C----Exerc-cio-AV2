@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <windows.h>
+
+int main() {
+    HANDLE hSerial;
+    DCB dcbSerialParams;
+    COMSTAT serialStatus;
+    DWORD errors;
+
+    hSerial = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSerial == INVALID_HANDLE_VALUE) {
+        printf("Erro ao abrir a porta serial\n");
+        return 1;
+    }
+    if (!GetCommState(hSerial, &dcbSerialParams)) {
+        printf("Erro ao obter as configurações da porta serial\n");
+        CloseHandle(hSerial);
+        return 1;
+    }
+    dcbSerialParams.BaudRate = CBR_9600;
+    dcbSerialParams.ByteSize = 8;
+    dcbSerialParams.StopBits = ONESTOPBIT;
+    dcbSerialParams.Parity = NOPARITY;
+    if (!SetCommState(hSerial, &dcbSerialParams)) {
+        printf("Erro ao configurar a porta serial\n");
+        CloseHandle(hSerial);
+        return 1;
+    }
+    if (!ClearCommError(hSerial, &errors, &serialStatus)) {
+        printf("Erro ao obter os erros de comunicação\n");
+        CloseHandle(hSerial);
+        return 1;
+    }
+
+    printf("Erros de comunicação: %lu\n", errors);
+
+    CloseHandle(hSerial);
+
+    return 0;
+}
